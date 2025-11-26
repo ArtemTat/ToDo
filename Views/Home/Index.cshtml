@@ -1,0 +1,32 @@
+﻿@model List<ToDoList.Models.ToDoItem>
+
+<h1>My To-Do List</h1>
+
+<form method="post" asp-action="AddTask">
+    <input type="text" name="title" placeholder="Enter a new task" required />
+    <button type="submit">Add</button>
+</form>
+
+<ul>
+    @foreach (var item in Model)
+    {
+        <li>
+            @if (item.IsCompleted)
+            {
+                <s>@item.Title</s>
+            }
+            else
+            {
+                @item.Title
+                <form method="post" asp-action="CompleteTask" style="display: inline;">
+                    <input type="hidden" name="id" value="@item.Id" />
+                    <button type="submit">Complete</button>
+                </form>
+            }
+            <form method="post" asp-action="DeleteTask" style="display: inline;">
+                <input type="hidden" name="id" value="@item.Id" />
+                <button type="submit">Delete</button>
+            </form>
+        </li>
+    }
+</ul>
