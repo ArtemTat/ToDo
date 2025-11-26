@@ -1,0 +1,110 @@
+﻿@{
+    ViewData["Title"] = "Vulnerable Login Form";
+}
+
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h3> Vulnerable Login Form (SQL Injection Demo)</h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <h5>🚨 This form demonstrates SQL Injection vulnerability!</h5>
+                    <p><strong>Try these payloads in the password field:</strong></p>
+                    <ul>
+                        <li><code>' OR '1'='1</code> - Basic bypass</li>
+                        <li><code>' OR 1=1--</code> - Comment-based bypass</li>
+                        <li><code>admin' --</code> - Username bypass</li>
+                    </ul>
+                </div>
+
+                <form method="post" asp-action="Login">
+                    @Html.AntiForgeryToken()
+
+                    <div class="form-group">
+                        <label for="username">Username:</label>
+                        <input type="text" id="username" name="username" class="form-control"
+                               placeholder="Enter username" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Password:</label>
+                        <input type="password" id="password" name="password" class="form-control"
+                               placeholder="Enter password" required />
+                    </div>
+
+                    <button type="submit" class="btn btn-danger btn-lg">Vulnerable Login</button>
+                </form>
+
+                @if (ViewBag.Message != null)
+                {
+                    <div class="alert alert-info mt-3">
+                        <h5>@ViewBag.Message</h5>
+                        @if (ViewBag.Username != null)
+                        {
+                            <p><strong>Username:</strong> @ViewBag.Username</p>
+                        }
+                        @if (ViewBag.Password != null)
+                        {
+                            <p><strong>Password:</strong> @ViewBag.Password</p>
+                        }
+                        @if (ViewBag.Query != null)
+                        {
+                            <div class="mt-2">
+                                <strong>Simulated SQL Query:</strong>
+                                <code class="d-block mt-1 p-2 bg-light">@ViewBag.Query</code>
+                            </div>
+                        }
+                        @if (ViewBag.Error != null)
+                        {
+                            <div class="alert alert-danger mt-2">
+                                @ViewBag.Error
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Инструкция по тестированию -->
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h5> How to Test SQL Injection</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Password</th>
+                            <th>Expected Result</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>admin</code></td>
+                            <td><code>password123</code></td>
+                            <td>✅ Normal login</td>
+                        </tr>
+                        <tr class="table-warning">
+                            <td><code>admin</code></td>
+                            <td><code>' OR '1'='1</code></td>
+                            <td>🚨 SQL Injection success!</td>
+                        </tr>
+                        <tr class="table-warning">
+                            <td><code>anything</code></td>
+                            <td><code>' OR 1=1--</code></td>
+                            <td>🚨 SQL Injection success!</td>
+                        </tr>
+                        <tr class="table-warning">
+                            <td><code>admin' --</code></td>
+                            <td><code>anything</code></td>
+                            <td> SQL Injection success!</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

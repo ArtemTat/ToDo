@@ -1,0 +1,29 @@
+﻿@{
+    ViewData["Title"] = "Search Tasks";
+}
+
+<h1>🔍 Search Tasks</h1>
+
+<form method="post" asp-action="Search">
+    @Html.AntiForgeryToken()
+
+    <div class="form-group">
+        <label for="searchTerm">Search term:</label>
+        <input type="text" id="searchTerm" name="searchTerm" class="form-control"
+               placeholder="Enter search term..." required />
+        <small class="form-text text-muted">
+            This form demonstrates SQL injection vulnerability
+        </small>
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-2">Search</button>
+</form>
+
+<div class="mt-4">
+    <h3>Try these test inputs:</h3>
+    <ul>
+        <li><code>test</code> - normal search</li>
+        <li><code>' OR '1'='1</code> - SQL injection attempt</li>
+        <li><code>test'; DROP TABLE Tasks; --</code> - destructive SQL injection</li>
+    </ul>
+</div>

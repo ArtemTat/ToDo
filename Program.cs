@@ -1,6 +1,7 @@
 using ToDoList.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.WebHost.UseUrls("http://localhost:5000");
 
 // Добавляем сервисы в контейнер.
 builder.Services.AddControllersWithViews();
@@ -41,7 +42,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthorization();
@@ -49,5 +50,8 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+Console.WriteLine("Application started on: http://localhost:5000");
+Console.WriteLine("Press Ctrl+C to shut down.");
 
 app.Run();
