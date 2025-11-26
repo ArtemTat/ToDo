@@ -21,7 +21,8 @@ namespace ToDoList.Controllers
         }
 
         [HttpPost]
-        public IActionResult AddTask(string title) // Уязвимость: нет проверки ввода!
+        [ValidateAntiForgeryToken] //  ДОБАВИЛ ЗАЩИТУ ОТ CSRF
+        public IActionResult AddTask(string title)
         {
             if (!string.IsNullOrWhiteSpace(title))
             {
@@ -31,14 +32,17 @@ namespace ToDoList.Controllers
         }
 
         [HttpPost]
-        public IActionResult CompleteTask(int id) // Уязвимость: нет защиты от CSRF!
+        [ValidateAntiForgeryToken] // ← ДОБАВИЛ ЗАЩИТУ ОТ CSRF
+        public IActionResult CompleteTask(int id)
         {
             _todoService.MarkAsCompleted(id);
             return RedirectToAction("Index");
         }
 
+
         [HttpPost]
-        public IActionResult DeleteTask(int id) // Уязвимость: нет защиты от CSRF!
+        [ValidateAntiForgeryToken] // ← ДОБАВИЛ ЗАЩИТУ ОТ CSRF
+        public IActionResult DeleteTask(int id)
         {
             _todoService.Delete(id);
             return RedirectToAction("Index");

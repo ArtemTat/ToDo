@@ -2,13 +2,38 @@ using ToDoList.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddControllersWithViews();
-
+// Добавляем сервисы в контейнер.
 builder.Services.AddControllersWithViews();
 builder.Services.AddSingleton<IToDoService, ToDoService>();
+builder.Services.Configure<CookiePolicyOptions>(options =>
+{
+    options.CheckConsentNeeded = context => true;
+    options.MinimumSameSitePolicy = SameSiteMode.Strict;
+});
+
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SameSite = SameSiteMode.Strict;
+});
 
 var app = builder.Build();
+
+// ДОБАВЛЯЕМ ЗАЩИТНЫЕ ЗАГОЛОВКИ
+app.Use(async (context, next) =>
+{
+    // Защита от кликджекинга
+    context.Response.Headers.Add("X-Frame-Options", "DENY");
+    // Запрет sniffing типа контента
+    context.Response.Headers.Add("X-Content-Type-Options", "nosniff");
+    // Политика безопасности контента
+    context.Response.Headers.Add("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'");
+    // Политика реферера
+    context.Response.Headers.Add("Referrer-Policy", "strict-origin-when-cross-origin");
+
+    await next();
+});
 
 if (!app.Environment.IsDevelopment())
 {
@@ -18,9 +43,7 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
-
 app.UseAuthorization();
 
 app.MapControllerRoute(

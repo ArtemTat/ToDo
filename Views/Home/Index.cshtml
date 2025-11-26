@@ -3,6 +3,7 @@
 <h1>My To-Do List</h1>
 
 <form method="post" asp-action="AddTask">
+    @Html.AntiForgeryToken()
     <input type="text" name="title" placeholder="Enter a new task" required />
     <button type="submit">Add</button>
 </form>
@@ -19,11 +20,13 @@
             {
                 @item.Title
                 <form method="post" asp-action="CompleteTask" style="display: inline;">
+                    @Html.AntiForgeryToken() 
                     <input type="hidden" name="id" value="@item.Id" />
                     <button type="submit">Complete</button>
                 </form>
             }
             <form method="post" asp-action="DeleteTask" style="display: inline;">
+                @Html.AntiForgeryToken() 
                 <input type="hidden" name="id" value="@item.Id" />
                 <button type="submit">Delete</button>
             </form>
