@@ -12,11 +12,15 @@ namespace ToDoList.Controllers
     {
         private readonly IToDoService _todoService;
         private readonly IConfiguration _configuration;
+        private readonly ILoginService _loginService;
+        private readonly ILogger<HomeController> _logger;
 
-        public HomeController(IToDoService todoService, IConfiguration configuration)
+        public HomeController(IToDoService todoService, IConfiguration configuration, ILoginService loginService, ILogger<HomeController> logger)
         {
             _todoService = todoService;
             _configuration = configuration;
+            _loginService = loginService;
+            _logger = logger;
         }
         public IActionResult Login()
         {
@@ -75,7 +79,7 @@ namespace ToDoList.Controllers
             // В реальном приложении это выглядело бы так:
             // string query = $"SELECT * FROM Users WHERE Username = '{username}' AND Password = '{password}'";
 
-            // Для демонстрации создаем "базу данных" в памяти
+            // Для демонстрации создаем "базу данных" 
             var users = new Dictionary<string, string>
     {
         { "admin", "password123" },
@@ -222,7 +226,7 @@ namespace ToDoList.Controllers
         }
 
         //УЯЗВИМЫЙ МЕТОД - демонстрация SQL инъекции
-        
+
         private List<ToDoItem> ExecuteVulnerableQuery(string searchTerm)
         {
             var results = new List<ToDoItem>();
@@ -249,5 +253,103 @@ namespace ToDoList.Controllers
             return results;
         }
 
+
+        // 🔐 ЗАЩИЩЕННАЯ ФОРМА С БЛОКИРОВКОЙ ОТ BRUTE-FORCE
+        public IActionResult LoginProtected()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult LoginProtected(string username, string password)
+        {
+            ViewBag.IsProtected = true;
+
+            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
+            {
+                ViewBag.Message = "Please enter both username and password";
+                return View("Login");
+            }
+
+            // 🔒 Проверка блокировки аккаунта
+            if (_loginService.IsAccountLocked(username))
+            {
+                ViewBag.Message = " Account temporarily locked due to too many failed attempts. Please try again in 5 minutes.";
+                _logger.LogWarning($"Account locked for user: {username}");
+                return View("Login");
+            }
+
+            // Проверка SQL инъекций
+            if (IsSqlInjectionAttemptProtected(username) || IsSqlInjectionAttemptProtected(password))
+            {
+                _loginService.RecordFailedAttempt(username);
+                ViewBag.Message = " Login failed - security violation detected";
+                ViewBag.SecurityWarning = " SQL Injection attempt detected!";
+                _logger.LogWarning($"SQL injection attempt from IP: {HttpContext.Connection.RemoteIpAddress}");
+                return View("Login");
+            }
+
+            // Проверка учетных данных
+            var users = new Dictionary<string, string>
+        {
+            { "admin", "Password123!" },
+            { "user", "UserPass123!" },
+            { "test", "TestPass123!" }
+        };
+
+            bool isAuthenticated = users.ContainsKey(username) && users[username] == password;
+
+            if (isAuthenticated)
+            {
+                _loginService.ResetFailedAttempts(username);
+                ViewBag.Message = " Login successful!";
+                ViewBag.Username = username;
+                _logger.LogInformation($"Successful login for user: {username}");
+            }
+            else
+            {
+                _loginService.RecordFailedAttempt(username);
+                var remainingAttempts = _loginService.GetRemainingAttempts(username);
+
+                if (remainingAttempts <= 0)
+                {
+                    ViewBag.Message = " Account locked due to too many failed attempts. Please try again in 5 minutes.";
+                }
+                else
+                {
+                    ViewBag.Message = $" Login failed. {remainingAttempts} attempts remaining.";
+                }
+
+                _logger.LogWarning($"Failed login attempt for user: {username}. Remaining attempts: {remainingAttempts}");
+            }
+
+            return View("Login");
+        }
+
+        // Метод для сброса блокировки (для тестирования)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult ResetLockout(string username)
+        {
+            _loginService.ResetFailedAttempts(username);
+            ViewBag.Message = $"✅ Lockout reset for user: {username}";
+            return View("Login");
+        }
+
+        // ОТДЕЛЬНЫЙ МЕТОД ДЛЯ BRUTE-FORCE ЗАЩИТЫ (чтобы избежать конфликта)
+        private bool IsSqlInjectionAttemptProtected(string input)
+        {
+            if (string.IsNullOrEmpty(input)) return false;
+
+            var sqlInjectionPatterns = new[]
+            {
+            "' OR '1'='1", "' OR 1=1--", "';", "--", "/*", "*/", "@@", "char(",
+            "union select", "insert into", "drop table", "update ", "delete from"
+        };
+
+            return sqlInjectionPatterns.Any(pattern =>
+                input.ToLower().Contains(pattern.ToLower()));
+        }
     }
 }

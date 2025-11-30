@@ -1,3 +1,4 @@
+using TodoApp.Services;
 using ToDoList.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -6,12 +7,14 @@ builder.WebHost.UseUrls("http://localhost:5000");
 // Добавляем сервисы в контейнер.
 builder.Services.AddControllersWithViews();
 builder.Services.AddSingleton<IToDoService, ToDoService>();
+builder.Services.AddSingleton<ILoginService, LoginService>();
+builder.Services.AddDistributedMemoryCache();
 builder.Services.Configure<CookiePolicyOptions>(options =>
 {
     options.CheckConsentNeeded = context => true;
     options.MinimumSameSitePolicy = SameSiteMode.Strict;
 });
-
+builder.Services.AddSession();
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.Cookie.HttpOnly = true;
@@ -21,6 +24,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 var app = builder.Build();
 
+app.UseSession();
 // ДОБАВЛЯЕМ ЗАЩИТНЫЕ ЗАГОЛОВКИ
 app.Use(async (context, next) =>
 {

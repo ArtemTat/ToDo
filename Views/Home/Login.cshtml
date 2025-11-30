@@ -1,109 +1,150 @@
 ﻿@{
-    ViewData["Title"] = "Vulnerable Login Form";
+    ViewData["Title"] = "Login Forms - Security Demo";
 }
 
 <div class="row">
-    <div class="col-md-8 offset-md-2">
-        <div class="card border-danger">
+    <!-- Уязвимая форма -->
+    <div class="col-md-4">
+        <div class="card border-danger mb-4">
             <div class="card-header bg-danger text-white">
-                <h3> Vulnerable Login Form (SQL Injection Demo)</h3>
+                <h5> Vulnerable Login</h5>
             </div>
             <div class="card-body">
-                <div class="alert alert-warning">
-                    <h5>🚨 This form demonstrates SQL Injection vulnerability!</h5>
-                    <p><strong>Try these payloads in the password field:</strong></p>
-                    <ul>
-                        <li><code>' OR '1'='1</code> - Basic bypass</li>
-                        <li><code>' OR 1=1--</code> - Comment-based bypass</li>
-                        <li><code>admin' --</code> - Username bypass</li>
-                    </ul>
-                </div>
-
                 <form method="post" asp-action="Login">
                     @Html.AntiForgeryToken()
-
                     <div class="form-group">
-                        <label for="username">Username:</label>
-                        <input type="text" id="username" name="username" class="form-control"
-                               placeholder="Enter username" required />
+                        <label>Username:</label>
+                        <input type="text" name="username" class="form-control" required />
                     </div>
-
                     <div class="form-group">
-                        <label for="password">Password:</label>
-                        <input type="password" id="password" name="password" class="form-control"
-                               placeholder="Enter password" required />
+                        <label>Password:</label>
+                        <input type="password" name="password" class="form-control" required />
                     </div>
-
-                    <button type="submit" class="btn btn-danger btn-lg">Vulnerable Login</button>
+                    <button type="submit" class="btn btn-danger">Vulnerable Login</button>
                 </form>
+            </div>
+        </div>
+    </div>
 
-                @if (ViewBag.Message != null)
+    <!-- Защищенная форма от SQL инъекций -->
+    <div class="col-md-4">
+        <div class="card border-warning mb-4">
+            <div class="card-header bg-warning text-white">
+                <h5> SQL Injection Protected</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" asp-action="LoginSecure">
+                    @Html.AntiForgeryToken()
+                    <div class="form-group">
+                        <label>Username:</label>
+                        <input type="text" name="username" class="form-control" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Password:</label>
+                        <input type="password" name="password" class="form-control" required />
+                    </div>
+                    <button type="submit" class="btn btn-warning">SQL Protected Login</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Защищенная форма от перебора -->
+    <div class="col-md-4">
+        <div class="card border-success mb-4">
+            <div class="card-header bg-success text-white">
+                <h5> Brute-Force Protected</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" asp-action="LoginProtected">
+                    @Html.AntiForgeryToken()
+                    <div class="form-group">
+                        <label>Username:</label>
+                        <input type="text" name="username" class="form-control" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Password:</label>
+                        <input type="password" name="password" class="form-control" required />
+                    </div>
+                    <button type="submit" class="btn btn-success">Brute-Force Protected</button>
+                </form>
+                <small class="text-muted">Max 3 attempts, then 5min lockout</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Форма для сброса блокировки -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h6> Testing Tools</h6>
+            </div>
+            <div class="card-body">
+                <form method="post" asp-action="ResetLockout">
+                    @Html.AntiForgeryToken()
+                    <div class="input-group">
+                        <input type="text" name="username" class="form-control" placeholder="Username to reset lockout" />
+                        <button type="submit" class="btn btn-outline-secondary">Reset Lockout</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Результаты -->
+@if (ViewBag.Message != null)
+{
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="alert alert-info">
+                <h5>@ViewBag.Message</h5>
+                @if (ViewBag.Username != null)
                 {
-                    <div class="alert alert-info mt-3">
-                        <h5>@ViewBag.Message</h5>
-                        @if (ViewBag.Username != null)
-                        {
-                            <p><strong>Username:</strong> @ViewBag.Username</p>
-                        }
-                        @if (ViewBag.Password != null)
-                        {
-                            <p><strong>Password:</strong> @ViewBag.Password</p>
-                        }
-                        @if (ViewBag.Query != null)
-                        {
-                            <div class="mt-2">
-                                <strong>Simulated SQL Query:</strong>
-                                <code class="d-block mt-1 p-2 bg-light">@ViewBag.Query</code>
-                            </div>
-                        }
-                        @if (ViewBag.Error != null)
-                        {
-                            <div class="alert alert-danger mt-2">
-                                @ViewBag.Error
-                            </div>
-                        }
+                    <p><strong>Username:</strong> @ViewBag.Username</p>
+                }
+                @if (ViewBag.SecurityWarning != null)
+                {
+                    <div class="alert alert-warning mt-2">
+                        <strong>Security Alert:</strong> @ViewBag.SecurityWarning
                     </div>
                 }
             </div>
         </div>
+    </div>
+}
 
-        <!-- Инструкция по тестированию -->
-        <div class="card mt-4">
-            <div class="card-header bg-info text-white">
-                <h5> How to Test SQL Injection</h5>
+<!-- Инструкция по тестированию -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5> Brute-Force Testing Instructions</h5>
             </div>
             <div class="card-body">
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Username</th>
-                            <th>Password</th>
-                            <th>Expected Result</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><code>admin</code></td>
-                            <td><code>password123</code></td>
-                            <td>✅ Normal login</td>
-                        </tr>
-                        <tr class="table-warning">
-                            <td><code>admin</code></td>
-                            <td><code>' OR '1'='1</code></td>
-                            <td>🚨 SQL Injection success!</td>
-                        </tr>
-                        <tr class="table-warning">
-                            <td><code>anything</code></td>
-                            <td><code>' OR 1=1--</code></td>
-                            <td>🚨 SQL Injection success!</td>
-                        </tr>
-                        <tr class="table-warning">
-                            <td><code>admin' --</code></td>
-                            <td><code>anything</code></td>
-                            <td> SQL Injection success!</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <h6>Test Credentials:</h6>
+                <ul>
+                    <li><strong>admin</strong> / <strong>Password123!</strong> (correct)</li>
+                    <li><strong>user</strong> / <strong>UserPass123!</strong> (correct)</li>
+                    <li><strong>test</strong> / <strong>TestPass123!</strong> (correct)</li>
+                </ul>
+
+                <h6>Brute-Force Test:</h6>
+                <ol>
+                    <li>Use "Brute-Force Protected" form</li>
+                    <li>Enter wrong password 3 times</li>
+                    <li>Account should lock for 5 minutes</li>
+                    <li>Use "Reset Lockout" to unlock for testing</li>
+                </ol>
+
+                <h6>ZAP Testing:</h6>
+                <ul>
+                    <li>Use "Fuzzer" to test multiple passwords</li>
+                    <li>Observe account lockout behavior</li>
+                    <li>Test different usernames and passwords</li>
+                </ul>
             </div>
         </div>
     </div>
